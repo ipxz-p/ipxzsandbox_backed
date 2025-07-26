@@ -35,9 +35,12 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
-# Env files
+# Ignore all env files
 .env
 .env.*
+
+# But don't ignore .env.example
+!.env.example
 
 # Coverage
 coverage.*
