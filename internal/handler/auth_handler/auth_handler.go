@@ -49,8 +49,26 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-	})
+	c.SetCookie("access_token", accessToken, 60*15, "/", "localhost", false, true)
+	c.SetCookie("refresh_token", refreshToken, 60*60*24*7, "/", "localhost", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "login success"})
+}
+
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || refreshToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token not found"})
+		return
+	}
+
+	newAccessToken, err := h.authUsecase.RefreshAccessToken(refreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired refresh token"})
+		return
+	}
+
+	c.SetCookie("access_token", newAccessToken, 60*15, "/", "localhost", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
 }

@@ -22,6 +22,7 @@ func InitRoutes(r *gin.Engine, db *gorm.DB) {
 
 	r.POST("/register", authHandler.Register)
 	r.POST("/login", authHandler.Login)
+	r.POST("/refresh-token", authHandler.RefreshToken)
 
 	auth := r.Group("/")
 	auth.Use(middleware.JWTAuthMiddleware())
