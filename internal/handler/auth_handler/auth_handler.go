@@ -1,11 +1,14 @@
 package auth_handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/ipxsandbox/internal/entity"
 	"github.com/ipxsandbox/internal/usecase/auth_usercase"
+	customValidator "github.com/ipxsandbox/internal/validator"
 )
 
 type AuthHandler struct {
@@ -16,17 +19,32 @@ func NewAuthHandler(auc auth_usercase.AuthUsecaseInterface) *AuthHandler {
 	return &AuthHandler{authUsecase: auc}
 }
 
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New()
+	customValidator.RegisterCustomValidators(validate)
+}
+
 func (h *AuthHandler) Register(c *gin.Context) {
 	var userData entity.User
-	err := c.ShouldBindBodyWithJSON(&userData)
+	err := c.ShouldBindJSON(&userData)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data"})
+		return
+	}
+
+	if err := validate.Struct(userData); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": customValidator.TranslateValidationError(err)})
 		return
 	}
 
 	resp, err := h.authUsecase.Register(userData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register user"})
 		return
 	}
 
@@ -39,12 +57,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&userData); err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data"})
 		return
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.Login(userData.Email, userData.Password)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -58,12 +78,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil || refreshToken == "" {
+		log.Println(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token not found"})
 		return
 	}
 
 	newAccessToken, err := h.authUsecase.RefreshAccessToken(refreshToken)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired refresh token"})
 		return
 	}
