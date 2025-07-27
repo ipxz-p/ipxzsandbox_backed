@@ -28,7 +28,7 @@ func init() {
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var userData entity.User
-	err := c.ShouldBind(&userData)
+	err := c.ShouldBindJSON(&userData)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data"})
