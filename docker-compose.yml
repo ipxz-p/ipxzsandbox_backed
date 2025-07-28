@@ -32,6 +32,9 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
 
 volumes:
   postgres_data:
