@@ -4,8 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/ipxsandbox/internal/handler/auth_handler"
-	"github.com/ipxsandbox/internal/handler/user_handler"
+	"github.com/ipxsandbox/internal/handler"
 	"github.com/ipxsandbox/internal/middleware"
 	"github.com/ipxsandbox/internal/repository/user"
 	authUsecase "github.com/ipxsandbox/internal/usecase/auth_usercase"
@@ -17,8 +16,8 @@ func InitRoutes(r *gin.Engine, db *gorm.DB) {
 	authUC := authUsecase.NewAuthUsecase(userRepo)
 	userUC := userUsecase.NewUserUsecase(userRepo)
 
-	authHandler := auth_handler.NewAuthHandler(authUC)
-	userHandler := user_handler.NewUserHandler(userUC)
+	authHandler := handler.NewAuthHandler(authUC)
+	userHandler := handler.NewUserHandler(userUC)
 
 	r.POST("/register", authHandler.Register)
 	r.POST("/login", authHandler.Login)

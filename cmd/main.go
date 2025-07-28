@@ -1,14 +1,16 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/ipxsandbox/config"
 	"github.com/ipxsandbox/internal/routes"
+	"github.com/ipxsandbox/internal/pkg/redis"
 )
 
 func main() {
 	db := config.InitDB()
+	redis.InitRedis()
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
